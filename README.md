@@ -29,7 +29,7 @@
 
 ## 📁 项目结构
 
- + "" + @"
+```
 ├── firmware/                        # 嵌入式固件代码（Keil MDK）
 │   ├── Drivers/                     # 驱动库（CMSIS + HAL）
 │   ├── Inc/                         # 头文件
@@ -42,7 +42,7 @@
 │   └── lzp_SmartControl.apk        # 安卓控制 APP
 ├── README.md
 └── .gitignore
-" + "" + @"
+```
 
 ## 🚀 快速开始
 
@@ -55,7 +55,7 @@
 
 ### 编译与烧录
 
-1. 使用 Keil MDK 打开 irmware\MDK-ARM\Smart_Lighting.uvprojx
+1. 使用 Keil MDK 打开 `firmware\MDK-ARM\Smart_Lighting.uvprojx`
 2. 点击 **Build**（F7）编译工程
 3. 使用 ST-Link 连接开发板，点击 **Download**（F8）烧录
 
@@ -75,7 +75,7 @@
 
 ### APP安装
 
-将 pp\lzp_SmartControl.apk 安装到Android手机即可远程控制照明系统。
+将 `app\lzp_SmartControl.apk` 安装到Android手机即可远程控制照明系统。
 
 ## 📝 主要控制逻辑
 
