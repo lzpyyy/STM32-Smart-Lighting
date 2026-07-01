@@ -1,0 +1,41 @@
+﻿# ===== Keil MDK 编译产物 =====
+*.o
+*.d
+*.crf
+*.axf
+*.hex
+*.map
+*.lst
+*.htm
+*.dep
+*.iex
+*.sct
+*.scvd
+*.build_log.htm
+
+# ===== Keil 用户配置 =====
+*.uvguix.*
+*.uvguix.*
+
+# ===== Keil 编译目录 =====
+DebugConfig/
+RTE/
+Listings/
+Objects/
+JLinkLog.txt
+JLinkSettings.ini
+
+# ===== 系统文件 =====
+Thumbs.db
+.DS_Store
+Desktop.ini
+
+# ===== IDE 配置 =====
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ===== 操作系统 =====
+.BIN/
