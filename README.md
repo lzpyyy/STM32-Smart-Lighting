@@ -29,29 +29,20 @@
 
 ## 📁 项目结构
 
-`
-基于STM32的小区楼道照明系统/
-├── SMARTLIGHTING/                    # 立创EDA项目导出目录
-│   └── Smart_Lighting/              # Keil MDK 嵌入式代码
-│       ├── Drivers/                 # 驱动库
-│       │   ├── CMSIS/              # ARM Cortex-M 核心支持
-│       │   └── STM32F1xx_HAL_Driver/  # STM32 HAL 库
-│       ├── Inc/                     # 头文件
-│       ├── Src/                     # 源代码
-│       │   ├── main.c              # 主程序（传感器采集/云端通信/控制逻辑）
-│       │   ├── adc.c               # ADC驱动（光敏+烟雾）
-│       │   ├── gpio.c              # GPIO驱动（人体红外+声音+按键）
-│       │   ├── i2c.c               # I2C驱动
-│       │   ├── usart.c             # 串口驱动（WiFi AT通信）
-│       │   ├── OLED.c / OLED.h     # OLED显示驱动
-│       │   └── stm32f1xx_it.c     # 中断服务函数
-│       ├── MDK-ARM/                # Keil 工程文件
-│       │   ├── Smart_Lighting.uvprojx   # Keil 工程
-│       │   └── startup_stm32f103xb.s   # 启动文件
-│       └── Smart_Lighting.ioc      # STM32CubeMX 配置
-├── lzp_SmartControl.apk            # 安卓控制APP
-└── 基于STM32的小区楼道照明系统.eprj2  # 立创EDA工程（原理图+PCB）
-`
+ + "" + @"
+├── firmware/                        # 嵌入式固件代码（Keil MDK）
+│   ├── Drivers/                     # 驱动库（CMSIS + HAL）
+│   ├── Inc/                         # 头文件
+│   ├── Src/                         # 源代码
+│   ├── MDK-ARM/                    # Keil 工程文件
+│   └── Smart_Lighting.ioc          # CubeMX 配置
+├── hardware/                        # PCB 设计
+│   └── *.eprj2                      # 立创EDA 工程（原理图+PCB）
+├── app/                             # 移动端
+│   └── lzp_SmartControl.apk        # 安卓控制 APP
+├── README.md
+└── .gitignore
+" + "" + @"
 
 ## 🚀 快速开始
 
@@ -64,7 +55,7 @@
 
 ### 编译与烧录
 
-1. 使用 Keil MDK 打开 SMARTLIGHTING\Smart_Lighting\MDK-ARM\Smart_Lighting.uvprojx
+1. 使用 Keil MDK 打开 irmware\MDK-ARM\Smart_Lighting.uvprojx
 2. 点击 **Build**（F7）编译工程
 3. 使用 ST-Link 连接开发板，点击 **Download**（F8）烧录
 
@@ -84,7 +75,7 @@
 
 ### APP安装
 
-将 lzp_SmartControl.apk 安装到Android手机即可远程控制照明系统。
+将 pp\lzp_SmartControl.apk 安装到Android手机即可远程控制照明系统。
 
 ## 📝 主要控制逻辑
 
@@ -92,7 +83,6 @@
 - **手动模式**：通过云端指令或物理按键强制开关灯
 - **烟雾检测**：实时监测烟雾浓度，超标时通过OLED显示报警并上传云端
 - **心跳保活**：定时发送心跳包维持云端连接，断线自动重连
-
 
 ## 📄 开源协议
 
