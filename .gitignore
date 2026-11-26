@@ -39,3 +39,6 @@ Desktop.ini
 
 # ===== 操作系统 =====
 .BIN/
+
+# Local firmware network settings (never commit credentials)
+/firmware/Inc/network_config.local.h

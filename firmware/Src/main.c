@@ -19,6 +19,7 @@
 #include <stdio.h>
 #include "oled.h"
 #include <string.h>  
+#include "network_config.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -174,7 +175,7 @@ void WiFi_Init_Boot(void) {
     for(int i=0; i<3; i++) { HAL_Delay(200); if(at_cmd_ok) break; } 
     // 连接指定的 WiFi 热点
     rx_index = 0; memset(rx_buffer, 0, 512);
-    at_cmd_ok = 0; WiFi_SendData("AT+CWJAP=\"Xiaomi 17 Pro Max\",\"qwqwqwe3322\"\r\n");
+    at_cmd_ok = 0; WiFi_SendData(LIGHTING_WIFI_JOIN_CMD);
     for(int i=0; i<50; i++) { HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13); HAL_Delay(200); if(at_cmd_ok) break; }
     // 如果连接 WiFi 热点失败，跳出初始化流程，由主循环的重连机制接管
     if (at_cmd_ok == 0) {
@@ -190,15 +191,15 @@ void WiFi_Init_Boot(void) {
     for(int i=0; i<4; i++) { HAL_Delay(250); if(at_cmd_ok) break; }  
     // 配置 OneNET 鉴权参数
     rx_index = 0; memset(rx_buffer, 0, 512);
-    at_cmd_ok = 0; WiFi_SendData("AT+MQTTUSERCFG=0,1,\"lzp_stm32\",\"mXiyma6Eg3\",\"version=2018-10-31&res=products%2FmXiyma6Eg3%2Fdevices%2Flzp_stm32&et=1893456000&method=md5&sign=J7ErFPY6lxl7INeQKbVtxQ%3D%3D\",0,0,\"\"\r\n");
+    at_cmd_ok = 0; WiFi_SendData(LIGHTING_MQTT_CONFIG_CMD);
     for(int i=0; i<4; i++) { HAL_Delay(250); if(at_cmd_ok) break; }  
     // 发起云端 MQTT 连接
     rx_index = 0; memset(rx_buffer, 0, 512);
-    at_cmd_ok = 0; WiFi_SendData("AT+MQTTCONN=0,\"mqtts.heclouds.com\",1883,0\r\n");
+    at_cmd_ok = 0; WiFi_SendData(LIGHTING_MQTT_CONNECT_CMD);
     for(int i=0; i<20; i++) { HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13); HAL_Delay(250); if(at_cmd_ok) break; }  
     // 订阅云端控制 Topic
     rx_index = 0; memset(rx_buffer, 0, 512);
-    at_cmd_ok = 0; WiFi_SendData("AT+MQTTSUB=0,\"$sys/mXiyma6Eg3/lzp_stm32/thing/property/set\",0\r\n");
+    at_cmd_ok = 0; WiFi_SendData(LIGHTING_MQTT_SUBSCRIBE_CMD);
     for(int i=0; i<8; i++) { HAL_Delay(250); if(at_cmd_ok) break; }
     // 检查网络初始化最终结果
     if (at_cmd_ok == 1) {
@@ -392,14 +393,18 @@ int main(void)
   /* USER CODE BEGIN 2 */
   OLED_Init();       
   OLED_Clear();      
-  // 开启串口接收中断
-  HAL_UART_Receive_IT(&huart2, &rx_data, 1);
+  // 仅联网版本接收 Wi-Fi 模块的数据
+  if (LIGHTING_NETWORK_ENABLED) {
+      HAL_UART_Receive_IT(&huart2, &rx_data, 1);
+  }
   // 上电硬件自检提示音
   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_RESET); 
   HAL_Delay(200);                                       
   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_SET);   
   // 执行开机网络初始化
-  WiFi_Init_Boot();
+  if (LIGHTING_NETWORK_ENABLED) {
+      WiFi_Init_Boot();
+  }
   // 网络连接成功提示音
   if (at_cmd_ok == 1) {
       HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_RESET); 
@@ -418,14 +423,14 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
         // 串口溢出错误(ORE)恢复机制：防止大量数据并发导致中断死锁
-        if(__HAL_UART_GET_FLAG(&huart2, UART_FLAG_ORE) != RESET) {
+        if (LIGHTING_NETWORK_ENABLED && __HAL_UART_GET_FLAG(&huart2, UART_FLAG_ORE) != RESET) {
             __HAL_UART_CLEAR_OREFLAG(&huart2);
             HAL_UART_Receive_IT(&huart2, &rx_data, 1); 
         }
         // 1. 调度执行系统核心任务
         System_Core_Task(); 
         // 2. 网络断线重连处理任务
-        if (need_reconnect == 1) 
+        if (LIGHTING_NETWORK_ENABLED && need_reconnect == 1)
         {
             is_connecting = 1;  
             // OLED 屏幕显示断线重连提示 
@@ -448,19 +453,19 @@ int main(void)
             at_cmd_ok = 0; WiFi_SendData("AT+CWMODE=1\r\n");
             for(int i=0; i<3; i++) { System_Core_Task(); HAL_Delay(200); if(at_cmd_ok) break; }
             rx_index = 0; memset(rx_buffer, 0, 512);
-            at_cmd_ok = 0; WiFi_SendData("AT+CWJAP=\"Xiaomi 17 Pro Max\",\"qwqwqwe3322\"\r\n");
+            at_cmd_ok = 0; WiFi_SendData(LIGHTING_WIFI_JOIN_CMD);
             for(int i=0; i<50; i++) { System_Core_Task(); HAL_Delay(200); if(at_cmd_ok) break; } 
             rx_index = 0; memset(rx_buffer, 0, 512);
             at_cmd_ok = 0; WiFi_SendData("AT+MQTTCLEAN=0\r\n");
             for(int i=0; i<4; i++) { System_Core_Task(); HAL_Delay(250); if(at_cmd_ok) break; }
             rx_index = 0; memset(rx_buffer, 0, 512);
-            at_cmd_ok = 0; WiFi_SendData("AT+MQTTUSERCFG=0,1,\"lzp_stm32\",\"mXiyma6Eg3\",\"version=2018-10-31&res=products%2FmXiyma6Eg3%2Fdevices%2Flzp_stm32&et=1893456000&method=md5&sign=J7ErFPY6lxl7INeQKbVtxQ%3D%3D\",0,0,\"\"\r\n");
+            at_cmd_ok = 0; WiFi_SendData(LIGHTING_MQTT_CONFIG_CMD);
             for(int i=0; i<4; i++) { System_Core_Task(); HAL_Delay(250); if(at_cmd_ok) break; }
             rx_index = 0; memset(rx_buffer, 0, 512);
-            at_cmd_ok = 0; WiFi_SendData("AT+MQTTCONN=0,\"mqtts.heclouds.com\",1883,0\r\n");
+            at_cmd_ok = 0; WiFi_SendData(LIGHTING_MQTT_CONNECT_CMD);
             for(int i=0; i<20; i++) { System_Core_Task(); HAL_Delay(250); if(at_cmd_ok) break; }
             rx_index = 0; memset(rx_buffer, 0, 512);
-            at_cmd_ok = 0; WiFi_SendData("AT+MQTTSUB=0,\"$sys/mXiyma6Eg3/lzp_stm32/thing/property/set\",0\r\n");
+            at_cmd_ok = 0; WiFi_SendData(LIGHTING_MQTT_SUBSCRIBE_CMD);
             for(int i=0; i<4; i++) { System_Core_Task(); HAL_Delay(250); if(at_cmd_ok) break; }
             // 验证重连结果并恢复系统状态
             if (at_cmd_ok == 1) 
@@ -489,14 +494,14 @@ int main(void)
         }               
 
         // 3. 云端通信任务：回执响应与心跳数据上报
-        if (need_reply == 1)
+        if (LIGHTING_NETWORK_ENABLED && need_reply == 1)
         {
             need_reply = 0; 
             char reply_cmd[256]; 
             char reply_payload[100]; 
             // 组装执行结果回执 JSON
             sprintf(reply_payload, "{\"id\":\"%s\",\"code\":200,\"msg\":\"success\"}", reply_id);
-            sprintf(reply_cmd, "AT+MQTTPUBRAW=0,\"$sys/mXiyma6Eg3/lzp_stm32/thing/property/set_reply\",%d,0,0\r\n", strlen(reply_payload));
+            sprintf(reply_cmd, LIGHTING_MQTT_PUBLISH_FMT("set_reply"), strlen(reply_payload));
             
             HAL_UART_Transmit(&huart2, (uint8_t *)reply_cmd, strlen(reply_cmd), 500); 
             HAL_Delay(100);
@@ -509,7 +514,7 @@ int main(void)
         if (current_tick - last_heartbeat_tick >= 3000) 
         {
             // 仅在网络正常运行状态下上报数据
-            if (is_connecting == 0) 
+            if (LIGHTING_NETWORK_ENABLED && is_connecting == 0)
             {
                 char topic_cmd[256]; 
                 char payload[300]; 
@@ -519,7 +524,7 @@ int main(void)
                 // 组装环境数据上报 JSON
                 sprintf(payload, "{\"id\":\"123\",\"version\":\"1.0\",\"params\":{\"light\":{\"value\":%d},\"smoke\":{\"value\":%d},\"human\":{\"value\":%d},\"sound\":{\"value\":%d},\"relay\":{\"value\":%s}}}", 
                         light_value, smoke_value, human_state, sound_state, relay_state);
-                sprintf(topic_cmd, "AT+MQTTPUBRAW=0,\"$sys/mXiyma6Eg3/lzp_stm32/thing/property/post\",%d,0,0\r\n", strlen(payload));
+                sprintf(topic_cmd, LIGHTING_MQTT_PUBLISH_FMT("post"), strlen(payload));
                 
                 HAL_UART_Transmit(&huart2, (uint8_t *)topic_cmd, strlen(topic_cmd), 500); 
                 HAL_Delay(100);

@@ -59,6 +59,15 @@
 2. 点击 **Build**（F7）编译工程
 3. 使用 ST-Link 连接开发板，点击 **Download**（F8）烧录
 
+### 可选：启用 Wi-Fi / OneNET
+
+默认固件不联网，保留本地照明和传感器功能。需要联网时：
+
+1. 将 `firmware/Inc/network_config.local.example.h` 复制为同目录下的 `network_config.local.h`。
+2. 在本地文件填入 Wi-Fi 名称、密码，以及 OneNET 设备名、产品 ID、新令牌和 MQTT 服务器地址。
+3. 在 Keil 的 **Options for Target → C/C++ → Define** 中追加 `LIGHTING_USE_LOCAL_NETWORK_CONFIG`，保留现有宏。重新编译并烧录。此宏及本地配置不用提交。
+4. 不要提交本地配置，也不要发布用真实凭据编译出的固件。分享演示版时，去掉该宏再重新编译。
+
 ### 硬件连接
 
 | 外设 | STM32引脚 | 说明 |
@@ -75,7 +84,7 @@
 
 ### APP安装
 
-将 `app\lzp_SmartControl.apk` 安装到Android手机即可远程控制照明系统。
+旧版 `app/lzp_SmartControl.apk` 使用预置的云端配置，不建议继续安装或分发。此处没有可重新配置并构建的 Android 源码。
 
 ## 📝 主要控制逻辑
 
